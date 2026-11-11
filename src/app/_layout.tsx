@@ -1,18 +1,22 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function Layout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <Stack
+        screenOptions={{
+          headerBackTitle: 'Voltar',
+          headerStyle: { backgroundColor: '#f0f0f3' },
+          headerTintColor: '#1c2024',
+          headerShadowVisible: false,
+          headerTitleStyle: { fontWeight: '700' },
+        }}>
+        <Stack.Screen name="index" options={{ title: 'FilaSmart' }} />
+        <Stack.Screen name="entrar" options={{ title: 'Entrar na fila' }} />
+        <Stack.Screen name="acompanhamento" options={{ title: 'Minha senha' }} />
+        <Stack.Screen name="preferencias" options={{ title: 'Preferências' }} />
+      </Stack>
+    </SafeAreaProvider>
   );
 }

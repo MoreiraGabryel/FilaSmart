@@ -1,98 +1,77 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { CartaoServico } from '@/components/CartaoServico';
+import { Carregando, EstadoErro, EstadoVazio } from '@/components/EstadoTela';
+import { Tela } from '@/components/Tela';
+import { servicos } from '@/constants/servicos';
+import { useSenhaAtual } from '@/hooks/useSenhaAtual';
+import { carregarAtualizacoesFila, type AtualizacaoFila } from '@/services/fila-api';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+type EstadoApi = 'carregando' | 'sucesso' | 'vazio' | 'erro';
+
+export default function Inicio() {
+  const { senha, carregando: carregandoSenha } = useSenhaAtual();
+  const [estadoApi, setEstadoApi] = useState<EstadoApi>('carregando');
+  const [atualizacoes, setAtualizacoes] = useState<AtualizacaoFila[]>([]);
+
+  useEffect(() => {
+    let ativo = true;
+    void carregarAtualizacoesFila()
+      .then((dados) => {
+        if (!ativo) return;
+        setAtualizacoes(dados);
+        setEstadoApi(dados.length ? 'sucesso' : 'vazio');
+      })
+      .catch(() => ativo && setEstadoApi('erro'));
+    return () => { ativo = false; };
+  }, []);
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <Tela>
+      <View style={styles.hero}>
+        <Text style={styles.eyebrow}>ATENDIMENTO ACADÊMICO</Text>
+        <Text style={styles.titulo}>Sua fila, sem espera desnecessária.</Text>
+        <Text style={styles.subtitulo}>Escolha um serviço, acompanhe sua senha e receba atualizações no dispositivo.</Text>
+      </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+      {carregandoSenha ? <Carregando /> : senha ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/acompanhamento')} style={styles.senhaAtiva}>
+          <Text style={styles.senhaLabel}>SENHA ATIVA</Text>
+          <Text style={styles.senhaTitulo}>{senha.servicoNome}</Text>
+          <Text style={styles.senhaTexto}>Posição atual: {senha.posicao}</Text>
+        </Pressable>
+      ) : null}
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <View style={styles.cabecalhoLista}>
+        <Text style={styles.secaoTitulo}>Serviços disponíveis</Text>
+        <Text style={styles.plataforma}>{Platform.OS} · {String(Platform.Version)}</Text>
+      </View>
+      <FlatList
+        data={servicos}
+        contentContainerStyle={styles.lista}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <CartaoServico servico={item} onPress={() => router.push({ pathname: '/entrar', params: { servicoId: item.id } })} />}
+        scrollEnabled={false}
+      />
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      <View style={styles.cabecalhoLista}><Text style={styles.secaoTitulo}>Atualizações da API</Text><Text style={styles.apiTag}>REST / JSON</Text></View>
+      {estadoApi === 'carregando' && <Carregando />}
+      {estadoApi === 'erro' && <EstadoErro mensagem="Verifique sua conexão e abra novamente o aplicativo." />}
+      {estadoApi === 'vazio' && <EstadoVazio mensagem="Não há atualizações publicadas agora." />}
+      {estadoApi === 'sucesso' && atualizacoes.map((item) => (
+        <View key={item.id} style={styles.atualizacao}>
+          <Text style={styles.atualizacaoTitulo}>{item.titulo}</Text>
+          <Text style={item.situacao === 'confirmada' ? styles.confirmada : styles.pendente}>{item.situacao}</Text>
+        </View>
+      ))}
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <Pressable accessibilityRole="button" onPress={() => router.push('/preferencias')} style={styles.link}><Text style={styles.linkTexto}>Gerenciar notificações e preferências</Text></Pressable>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  hero: { gap: 10, paddingBottom: 8, paddingTop: 8 }, eyebrow: { color: '#0d74ce', fontSize: 12, fontWeight: '800', letterSpacing: 1 }, titulo: { color: '#000', fontSize: 32, fontWeight: '800', letterSpacing: -1, lineHeight: 38 }, subtitulo: { color: '#60646c', fontSize: 16, lineHeight: 23 }, senhaAtiva: { backgroundColor: '#0b0d10', borderRadius: 18, gap: 4, padding: 18 }, senhaLabel: { color: '#9cc7ff', fontSize: 11, fontWeight: '800', letterSpacing: 1 }, senhaTitulo: { color: '#fff', fontSize: 20, fontWeight: '700' }, senhaTexto: { color: '#d8e3f0', fontSize: 15 }, cabecalhoLista: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }, secaoTitulo: { color: '#1c2024', fontSize: 19, fontWeight: '700' }, plataforma: { color: '#60646c', fontSize: 12 }, apiTag: { color: '#0d74ce', fontSize: 12, fontWeight: '700' }, lista: { gap: 12, paddingTop: 4 }, atualizacao: { backgroundColor: '#fff', borderColor: '#e0e1e6', borderRadius: 12, borderWidth: 1, flexDirection: 'row', gap: 12, justifyContent: 'space-between', padding: 14 }, atualizacaoTitulo: { color: '#363a3f', flex: 1, fontSize: 14, lineHeight: 20 }, confirmada: { color: '#237c4b', fontSize: 12, fontWeight: '700' }, pendente: { color: '#ab6400', fontSize: 12, fontWeight: '700' }, link: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, linkTexto: { color: '#0d74ce', fontSize: 15, fontWeight: '700' },
 });

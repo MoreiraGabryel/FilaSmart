@@ -1,56 +1,106 @@
-# Welcome to your Expo app 👋
+# FilaSmart
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> Gestão de filas acadêmicas em uma experiência mobile simples, persistente e multiplataforma.
 
-## Get started
+[![Expo](https://img.shields.io/badge/Expo-SDK%2058-000020?logo=expo&logoColor=white)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.88-61DAFB?logo=react&logoColor=111)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Status](https://img.shields.io/badge/status-protótipo%20acadêmico-0d74ce)](#contexto)
 
-1. Install dependencies
+**FilaSmart** é o projeto integrador da disciplina de Programação para Dispositivos Móveis. Ele organiza o ingresso de estudantes em filas de serviços acadêmicos, mantém a senha ativa no dispositivo e comunica atualizações de posição com feedback nativo.
 
-   ```bash
-   npm install
-   ```
+## Demonstração do fluxo
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+Serviços disponíveis → Entrada na fila → Senha persistida → Acompanhamento
+                                      ↘ Preferências e notificações
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+| Tela | Finalidade |
+| --- | --- |
+| **Serviços** | Mostra os serviços acadêmicos com `FlatList`, a senha ativa e atualizações REST. |
+| **Entrada na fila** | Valida o formulário e cria uma senha local. |
+| **Acompanhamento** | Exibe posição, status e simula uma atualização da fila. |
+| **Preferências** | Solicita permissão para notificações locais e documenta o comportamento multiplataforma. |
 
-### Other setup steps
+## Recursos técnicos
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- **React Native + Expo SDK 58 + TypeScript**
+- **Expo Router** para navegação entre quatro telas
+- **AsyncStorage** para persistência da senha atual
+- **JSONPlaceholder REST API** com processamento de JSON
+- Estados de **carregamento, sucesso, ausência de dados e erro de rede**
+- **`expo-haptics`** para confirmação tátil em ações
+- **`expo-notifications`** com solicitação explícita de permissão
+- Tratamento Android/iOS com `Platform`, `Platform.select`, `ToastAndroid` e `Alert`
+- Formulário com `TextInput` e validação de dados
+- Componentes reutilizáveis, props, `useState` e `useEffect`
 
-## Learn more
+## Arquitetura
 
-To learn more about developing your project with Expo, look at the following resources:
+```text
+src/
+├── app/                  # Rotas Expo Router
+├── components/           # Blocos de interface reutilizáveis
+├── constants/            # Catálogo de serviços
+├── features/fila/        # Domínio e validações
+├── hooks/                # Estado compartilhado da senha
+└── services/             # API REST, AsyncStorage e notificações
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Executar localmente
 
-## Join the community
+```bash
+git clone https://github.com/MoreiraGabryel/FilaSmart.git
+cd FilaSmart
+npm install
+npm start
+```
 
-Join our community of developers creating universal apps.
+### Development Build
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+O aplicativo usa módulos nativos. Para testar o cliente de desenvolvimento em Android físico após instalar o build EAS:
+
+```bash
+npx expo start --dev-client
+```
+
+## Qualidade verificada
+
+```bash
+npm test
+npx tsc --noEmit
+npm run lint
+npx expo install --check
+npx expo export --platform web
+npx expo export --platform android
+npx expo export --platform ios
+```
+
+- **7 testes automatizados** aprovados para domínio, validação, armazenamento, API e ação háptica.
+- Verificações de TypeScript, ESLint, dependências Expo e bundles web/Android/iOS aprovadas localmente.
+
+## Builds Android no EAS
+
+| Artefato | Perfil | Acesso |
+| --- | --- | --- |
+| Development Build | `development` | [Acompanhar build](https://expo.dev/accounts/moreiragabryel/projects/filasmart/builds/f7bb9bbd-d346-4547-9b8d-b6ffdd27ec39) |
+| APK instalável | `preview` | [Acompanhar build](https://expo.dev/accounts/moreiragabryel/projects/filasmart/builds/26675ef7-f366-4d44-80cc-dd55dfb5ff60) |
+| AAB de produção | `production` | [Acompanhar build](https://expo.dev/accounts/moreiragabryel/projects/filasmart/builds/ef1bafbc-3953-4c65-9758-e0eb34ae5403) |
+
+> Os builds são processados remotamente pelo EAS. O checklist físico só deve ser marcado após instalação real em Android.
+
+## Contexto
+
+- **Aluno:** Marcos Gabryel da Silva Moreira
+- **Turma:** Matutino · **4º semestre**
+- **Professor:** Genivaldo Carlos Da Silva
+- **Disciplina:** Programação para Dispositivos Móveis
+
+## Limitações documentadas
+
+- A API JSONPlaceholder é uma fonte pública didática para demonstrar REST/JSON; não é um backend universitário real.
+- A confirmação de notificações, háptico, instalação do APK e Development Build exige um dispositivo Android físico.
+- iOS é contemplado pelo código compartilhado, mas não foi executado nativamente neste ambiente Linux.
+
+Consulte [CHECKLIST_TESTES.md](CHECKLIST_TESTES.md) para a validação manual e [RELATORIO_TECNICO_FILASMART_A2.pdf](RELATORIO_TECNICO_FILASMART_A2.pdf) para a documentação acadêmica completa.

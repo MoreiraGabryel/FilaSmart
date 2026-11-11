@@ -38,6 +38,7 @@
       ]
     ],
     "experiments": {
+      "baseUrl": "/FilaSmart",
       "typedRoutes": true,
       "reactCompiler": true
     },
